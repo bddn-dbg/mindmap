@@ -33,9 +33,22 @@
             padding: 40px 20px;
         }
 
-        .logo {
-            font-size: 55px;
-            margin-bottom: 15px;
+        .logo-container {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .main-logo {
+            height: 90px;
+            width: auto;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         h1 {
@@ -119,7 +132,9 @@
 
     <div class="container">
 
-        <div class="logo">🎓</div>
+        <div class="logo-container">
+            <img src="https://bddn.in/bddn_logo.webp" alt="Bihar Digital Data & Network Logo" class="main-logo" onerror="this.onerror=null; this.src='logo.jpg';">
+        </div>
 
         <h1>Bihar Digital Data & Network</h1>
 
