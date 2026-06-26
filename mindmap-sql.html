@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySQL Mastery - Mind Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0B1220;
+            --bg-grid: rgba(255, 255, 255, 0.035);
+            --panel: #101a2e;
+            --panel-border: #1d2c47;
+            --ink: #E6EDF7;
+            --muted: #8694ab;
+            --root: #67E8F9;
+            --c1: #F2B84B;
+            --c2: #2DD4BF;
+            --c3: #FB7472;
+            --c4: #9B8CFF;
+            --c5: #4EA8DE;
+            --c6: #A3E635;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            background: var(--bg);
+            background-image:
+                linear-gradient(var(--bg-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+            background-size: 28px 28px;
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        .canvas-wrap {
+            position: relative;
+            overflow: auto;
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(ellipse 70% 50% at 18% 12%, rgba(103, 232, 249, 0.06), transparent 60%);
+        }
+
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: linear-gradient(180deg, rgba(11, 18, 32, 0.92), rgba(11, 18, 32, 0.65));
+            backdrop-filter: blur(6px);
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        button {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12.5px;
+            font-weight: 600;
+            border-radius: 7px;
+            border: 1px solid var(--panel-border);
+            background: #15213a;
+            color: var(--ink);
+            padding: 9px 14px;
+            cursor: pointer;
+            transition: transform .12s ease, border-color .15s ease, background .15s ease;
+        }
+
+        button:hover {
+            border-color: var(--root);
+            background: #192742;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .zoom-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+            align-self: center;
+            margin-left: 4px;
+            min-width: 42px;
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        #tree-scaled {
+            transform-origin: top left;
+            padding: 50px 70px 100px;
+        }
+
+        #tree-inner {
+            position: relative;
+            display: inline-block;
+        }
+
+        .node-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .node-children {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+            margin-left: 78px;
+        }
+
+        .node-self {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 10px 18px;
+            border-radius: 9px;
+            border: 1.5px solid var(--c, var(--root));
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+            box-shadow:
+                0 4px 16px -8px rgba(0, 0, 0, 0.7),
+                0 0 16px -6px var(--c, var(--root));
+            white-space: nowrap;
+            z-index: 2;
+            opacity: 0;
+            animation: pop-in .42s cubic-bezier(.2, .8, .2, 1) forwards;
+            animation-delay: var(--delay, 0s);
+        }
+
+        @keyframes pop-in {
+            from {
+                opacity: 0;
+                transform: scale(.85);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .node-self.is-root {
+            padding: 14px 22px;
+            border-width: 2px;
+            font-size: 15.5px;
+        }
+
+        .n-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--ink);
+        }
+
+        .node-self.is-root .n-title {
+            font-size: 15.5px;
+            color: var(--root);
+        }
+
+        .n-detail {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            color: var(--muted);
+        }
+
+        .toggle {
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 19px;
+            height: 19px;
+            border-radius: 50%;
+            background: #0b1220;
+            border: 1.5px solid var(--c, var(--root));
+            color: var(--ink);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 3;
+            user-select: none;
+        }
+
+        .toggle:hover {
+            box-shadow: 0 0 10px -2px var(--c, var(--root));
+        }
+
+        svg.connectors {
+            position: absolute;
+            top: 0;
+            left: 0;
+            overflow: visible;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        svg.connectors path {
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        svg.connectors circle {
+            r: 3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="canvas-wrap" id="canvas-wrap">
+        <div class="toolbar">
+            <button id="zoom-out">−</button>
+            <span class="zoom-label" id="zoom-label">100%</span>
+            <button id="zoom-in">+</button>
+            <button id="zoom-reset">Reset</button>
+            <div class="spacer"></div>
+            <button id="btn-expand">Expand All</button>
+            <button id="btn-collapse" style="margin-right: 8px;">Collapse All</button>
+        </div>
+        <div id="tree-scaled">
+            <div id="tree-inner"></div>
+        </div>
+    </div>
+
+    <footer
+        style="position: fixed; bottom: 0; left: 0; right: 0; padding: 10px 28px; background: rgba(11, 18, 32, 0.85); backdrop-filter: blur(4px); border-top: 1px solid var(--panel-border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; z-index: 10;">
+        Created by <b>Bihar Digital Data & Network</b> (<a href="https://bddn.in" target="_blank"
+            style="color: var(--root); text-decoration: none;">bddn.in</a>)
+    </footer>
+
+    <script>
+        const treeData = { "id": 0, "title": "MySQL Mastery", "detail": null, "children": [{ "id": 1, "title": "Introduction & Setup", "detail": null, "children": [{ "id": 2, "title": "Introduction to MySQL", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c1" }, { "id": 3, "title": "MySQL Installation", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c1" }, { "id": 4, "title": "MySQL Environment", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c1" }], "collapsed": false, "depth": 1, "color": "c1" }, { "id": 5, "title": "SQL Fundamentals", "detail": null, "children": [{ "id": 6, "title": "SQL Command Categories", "detail": null, "children": [{ "id": 7, "title": "DDL", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 8, "title": "DML", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 9, "title": "DCL", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 10, "title": "TCL", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 11, "title": "DQL", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }], "collapsed": false, "depth": 2, "color": "c2" }, { "id": 12, "title": "SQL Data Types", "detail": null, "children": [{ "id": 13, "title": "CHAR", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 14, "title": "VARCHAR", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 15, "title": "INT", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 16, "title": "DECIMAL", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 17, "title": "DATE", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 18, "title": "TIME", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }], "collapsed": false, "depth": 2, "color": "c2" }, { "id": 19, "title": "SQL Constraints", "detail": null, "children": [{ "id": 20, "title": "Primary Key", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 21, "title": "NOT NULL", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 22, "title": "UNIQUE", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 23, "title": "DEFAULT", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 24, "title": "CHECK", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }, { "id": 25, "title": "FOREIGN KEY", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c2" }], "collapsed": false, "depth": 2, "color": "c2" }], "collapsed": false, "depth": 1, "color": "c2" }, { "id": 26, "title": "Database & Table Commands", "detail": null, "children": [{ "id": 27, "title": "CREATE DATABASE", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c3" }, { "id": 28, "title": "USE DATABASE", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c3" }, { "id": 29, "title": "SHOW DATABASES", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c3" }, { "id": 30, "title": "CREATE TABLE", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c3" }, { "id": 31, "title": "ALTER TABLE", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c3" }, { "id": 32, "title": "SHOW TABLES", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c3" }], "collapsed": false, "depth": 1, "color": "c3" }, { "id": 33, "title": "Data Manipulation", "detail": null, "children": [{ "id": 34, "title": "INSERT", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c4" }, { "id": 35, "title": "UPDATE", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c4" }, { "id": 36, "title": "DELETE", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c4" }, { "id": 37, "title": "ALTER Command", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c4" }], "collapsed": false, "depth": 1, "color": "c4" }, { "id": 38, "title": "SELECT Query", "detail": null, "children": [{ "id": 39, "title": "Basic SELECT", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 40, "title": "WHERE Clause", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 41, "title": "AND", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 42, "title": "OR", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 43, "title": "NOT", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 44, "title": "DISTINCT", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 45, "title": "BETWEEN", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 46, "title": "IN", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 47, "title": "LIKE", "detail": null, "children": [{ "id": 48, "title": "%", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c5" }, { "id": 49, "title": "_", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c5" }], "collapsed": false, "depth": 2, "color": "c5" }], "collapsed": false, "depth": 1, "color": "c5" }, { "id": 50, "title": "Keys & Relationships", "detail": null, "children": [{ "id": 51, "title": "Foreign Key Concept", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c6" }, { "id": 52, "title": "Parent Table", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c6" }, { "id": 53, "title": "Child Table", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c6" }, { "id": 54, "title": "Referential Integrity", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c6" }, { "id": 55, "title": "CREATE TABLE REFERENCES", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c6" }, { "id": 56, "title": "ALTER TABLE ADD FOREIGN KEY", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c6" }], "collapsed": false, "depth": 1, "color": "c6" }, { "id": 57, "title": "MySQL Functions", "detail": null, "children": [{ "id": 58, "title": "Numeric Functions", "detail": null, "children": [{ "id": 59, "title": "MOD", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 60, "title": "POWER", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 61, "title": "ROUND", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 62, "title": "SIGN", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 63, "title": "SQRT", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 64, "title": "TRUNCATE", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }], "collapsed": false, "depth": 2, "color": "c1" }, { "id": 65, "title": "String Functions", "detail": null, "children": [{ "id": 66, "title": "CHAR", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 67, "title": "CONCAT", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 68, "title": "LOWER / LCASE", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 69, "title": "UPPER / UCASE", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 70, "title": "SUBSTR", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 71, "title": "TRIM", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 72, "title": "LTRIM", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 73, "title": "RTRIM", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 74, "title": "INSTR", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 75, "title": "LENGTH", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 76, "title": "LEFT", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 77, "title": "RIGHT", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 78, "title": "MID", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }], "collapsed": false, "depth": 2, "color": "c1" }, { "id": 79, "title": "Date & Time Functions", "detail": null, "children": [{ "id": 80, "title": "CURDATE()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 81, "title": "CURTIME()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 82, "title": "NOW()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 83, "title": "DAY()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 84, "title": "MONTH()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 85, "title": "YEAR()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 86, "title": "DATE_FORMAT()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 87, "title": "DATEDIFF()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }], "collapsed": false, "depth": 2, "color": "c1" }, { "id": 88, "title": "Aggregate Functions", "detail": null, "children": [{ "id": 89, "title": "COUNT()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 90, "title": "SUM()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 91, "title": "AVG()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 92, "title": "MAX()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }, { "id": 93, "title": "MIN()", "detail": null, "children": [], "collapsed": false, "depth": 3, "color": "c1" }], "collapsed": false, "depth": 2, "color": "c1" }], "collapsed": false, "depth": 1, "color": "c1" }, { "id": 94, "title": "Joins", "detail": null, "children": [{ "id": 95, "title": "Equi Join", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c2" }, { "id": 96, "title": "Non-Equi Join", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c2" }, { "id": 97, "title": "Natural Join", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c2" }, { "id": 98, "title": "Cross Join", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c2" }, { "id": 99, "title": "Left Join", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c2" }, { "id": 100, "title": "Right Join", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c2" }], "collapsed": false, "depth": 1, "color": "c2" }, { "id": 101, "title": "Set Operations", "detail": null, "children": [{ "id": 102, "title": "UNION", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c3" }, { "id": 103, "title": "UNION ALL", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c3" }, { "id": 104, "title": "INTERSECT*", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c3" }, { "id": 105, "title": "EXCEPT / MINUS*", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c3" }], "collapsed": false, "depth": 1, "color": "c3" }, { "id": 106, "title": "Practical Implementation", "detail": null, "children": [{ "id": 107, "title": "Part 01", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c4" }, { "id": 108, "title": "Part 02", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c4" }], "collapsed": false, "depth": 1, "color": "c4" }, { "id": 109, "title": "Important Comparisons", "detail": null, "children": [{ "id": 110, "title": "CHAR vs VARCHAR", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 111, "title": "Candidate Key vs Primary Key vs Alternate Key", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 112, "title": "DDL vs DML vs DCL vs TCL vs DQL", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 113, "title": "WHERE vs HAVING", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 114, "title": "DELETE vs DROP", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }, { "id": 115, "title": "ALTER vs UPDATE", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c5" }], "collapsed": false, "depth": 1, "color": "c5" }, { "id": 116, "title": "Revision", "detail": null, "children": [{ "id": 117, "title": "MySQL One Shot", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c6" }, { "id": 118, "title": "Important Interview Questions", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c6" }], "collapsed": false, "depth": 1, "color": "c6" }, { "id": 119, "title": "Practice & Assessment", "detail": null, "children": [{ "id": 120, "title": "100+ MySQL MCQs", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c1" }, { "id": 121, "title": "Knowledge Quiz", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c1" }, { "id": 122, "title": "SQL MCQs Part 01", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c1" }, { "id": 123, "title": "SQL MCQs Part 02", "detail": null, "children": [], "collapsed": false, "depth": 2, "color": "c1" }], "collapsed": false, "depth": 1, "color": "c1" }], "collapsed": false, "depth": 0, "color": null };
+        let zoom = 1;
+
+        const elTreeInner = document.getElementById('tree-inner');
+        const elTreeScaled = document.getElementById('tree-scaled');
+        const elZoomLabel = document.getElementById('zoom-label');
+
+        function buildNodeWrapper(node, orderIndex) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'node-wrapper';
+
+            const self = document.createElement('div');
+            self.className = 'node-self' + (node.depth === 0 ? ' is-root' : '');
+            self.dataset.id = node.id;
+            if (node.color) self.style.setProperty('--c', `var(--${node.color})`);
+            self.style.setProperty('--delay', (Math.min(orderIndex, 14) * 0.035) + 's');
+
+            const titleEl = document.createElement('div');
+            titleEl.className = 'n-title';
+            titleEl.textContent = node.title;
+            self.appendChild(titleEl);
+
+            if (node.detail) {
+                const detailEl = document.createElement('div');
+                detailEl.className = 'n-detail';
+                detailEl.textContent = node.detail;
+                self.appendChild(detailEl);
+            }
+
+            if (node.children.length > 0) {
+                const toggle = document.createElement('div');
+                toggle.className = 'toggle';
+                toggle.textContent = node.collapsed ? '+' : '−';
+                toggle.title = node.collapsed ? 'Expand' : 'Collapse';
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    node.collapsed = !node.collapsed;
+                    render();
+                });
+                self.appendChild(toggle);
+            }
+
+            wrapper.appendChild(self);
+
+            if (node.children.length > 0 && !node.collapsed) {
+                const childrenBox = document.createElement('div');
+                childrenBox.className = 'node-children';
+                node.children.forEach((child, i) => {
+                    childrenBox.appendChild(buildNodeWrapper(child, orderIndex + i + 1));
+                });
+                wrapper.appendChild(childrenBox);
+            }
+
+            return wrapper;
+        }
+
+        function drawConnectors() {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'connectors');
+            svg.setAttribute('width', elTreeInner.scrollWidth);
+            svg.setAttribute('height', elTreeInner.scrollHeight);
+
+            function walk(node) {
+                if (node.children.length === 0 || node.collapsed) return;
+                const parentEl = elTreeInner.querySelector(`.node-self[data-id="${node.id}"]`);
+                if (!parentEl) return;
+                const px = parentEl.offsetLeft + parentEl.offsetWidth;
+                const py = parentEl.offsetTop + parentEl.offsetHeight / 2;
+
+                node.children.forEach(child => {
+                    const childEl = elTreeInner.querySelector(`.node-self[data-id="${child.id}"]`);
+                    if (!childEl) return;
+                    const cx = childEl.offsetLeft;
+                    const cy = childEl.offsetTop + childEl.offsetHeight / 2;
+                    const midX = px + (cx - px) * 0.5;
+
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', `M ${px},${py} C ${midX},${py} ${midX},${cy} ${cx},${cy}`);
+                    path.setAttribute('stroke', `var(--${child.color || 'root'})`);
+                    path.setAttribute('opacity', '0.75');
+                    svg.appendChild(path);
+
+                    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    dot.setAttribute('cx', cx);
+                    dot.setAttribute('cy', cy);
+                    dot.setAttribute('fill', `var(--${child.color || 'root'})`);
+                    svg.appendChild(dot);
+
+                    walk(child);
+                });
+            }
+            walk(treeData);
+            elTreeInner.appendChild(svg);
+        }
+
+        function updateScaledSize() {
+            const w = elTreeInner.scrollWidth;
+            const h = elTreeInner.scrollHeight;
+            elTreeScaled.style.transform = `scale(${zoom})`;
+            elTreeScaled.style.width = (w * zoom + 140) + 'px';
+            elTreeScaled.style.height = (h * zoom + 100) + 'px';
+            elZoomLabel.textContent = Math.round(zoom * 100) + '%';
+        }
+
+        function render() {
+            if (!treeData) return;
+            elTreeInner.innerHTML = '';
+            elTreeInner.style.position = 'relative';
+            elTreeInner.appendChild(buildNodeWrapper(treeData, 0));
+            requestAnimationFrame(() => {
+                drawConnectors();
+                updateScaledSize();
+            });
+        }
+
+        function setAllCollapsed(node, value, isRoot = true) {
+            if (!isRoot) node.collapsed = value;
+            node.children.forEach(c => setAllCollapsed(c, value, false));
+        }
+
+        document.getElementById('btn-expand').addEventListener('click', () => { setAllCollapsed(treeData, false); render(); });
+        document.getElementById('btn-collapse').addEventListener('click', () => { setAllCollapsed(treeData, true); render(); });
+
+        document.getElementById('zoom-in').addEventListener('click', () => { zoom = Math.min(1.8, +(zoom + 0.1).toFixed(2)); updateScaledSize(); });
+        document.getElementById('zoom-out').addEventListener('click', () => { zoom = Math.max(0.4, +(zoom - 0.1).toFixed(2)); updateScaledSize(); });
+        document.getElementById('zoom-reset').addEventListener('click', () => { zoom = 1; updateScaledSize(); });
+
+        render();
+    </script>
+</body>
+
+</html>
