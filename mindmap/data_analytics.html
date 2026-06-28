@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Analytics - Mind Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0B1220;
+            --bg-grid: rgba(255, 255, 255, 0.035);
+            --panel: #101a2e;
+            --panel-border: #1d2c47;
+            --ink: #E6EDF7;
+            --muted: #8694ab;
+            --root: #67E8F9;
+            --c1: #F2B84B;
+            --c2: #2DD4BF;
+            --c3: #FB7472;
+            --c4: #9B8CFF;
+            --c5: #4EA8DE;
+            --c6: #A3E635;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: var(--bg);
+            background-image:
+                linear-gradient(var(--bg-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+            background-size: 28px 28px;
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        .canvas-wrap {
+            position: relative;
+            overflow: auto;
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(ellipse 70% 50% at 18% 12%, rgba(103, 232, 249, 0.06), transparent 60%);
+        }
+
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: linear-gradient(180deg, rgba(11, 18, 32, 0.92), rgba(11, 18, 32, 0.65));
+            backdrop-filter: blur(6px);
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        button {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12.5px;
+            font-weight: 600;
+            border-radius: 7px;
+            border: 1px solid var(--panel-border);
+            background: #15213a;
+            color: var(--ink);
+            padding: 9px 14px;
+            cursor: pointer;
+            transition: transform .12s ease, border-color .15s ease, background .15s ease;
+        }
+
+        button:hover {
+            border-color: var(--root);
+            background: #192742;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .zoom-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+            align-self: center;
+            margin-left: 4px;
+            min-width: 42px;
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        #tree-scaled {
+            transform-origin: top left;
+            padding: 50px 70px 100px;
+        }
+
+        #tree-inner {
+            position: relative;
+            display: inline-block;
+        }
+
+        .node-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .node-children {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+            margin-left: 78px;
+        }
+
+        .node-self {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 10px 18px;
+            border-radius: 9px;
+            border: 1.5px solid var(--c, var(--root));
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+            box-shadow:
+                0 4px 16px -8px rgba(0, 0, 0, 0.7),
+                0 0 16px -6px var(--c, var(--root));
+            white-space: nowrap;
+            z-index: 2;
+            opacity: 0;
+            animation: pop-in .42s cubic-bezier(.2, .8, .2, 1) forwards;
+            animation-delay: var(--delay, 0s);
+        }
+
+        @keyframes pop-in {
+            from {
+                opacity: 0;
+                transform: scale(.85);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .node-self.is-root {
+            padding: 14px 22px;
+            border-width: 2px;
+            font-size: 15.5px;
+        }
+
+        .n-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--ink);
+        }
+
+        .node-self.is-root .n-title {
+            font-size: 15.5px;
+            color: var(--root);
+        }
+
+        .n-detail {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            color: var(--muted);
+        }
+
+        .toggle {
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 19px;
+            height: 19px;
+            border-radius: 50%;
+            background: #0b1220;
+            border: 1.5px solid var(--c, var(--root));
+            color: var(--ink);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 3;
+            user-select: none;
+        }
+
+        .toggle:hover {
+            box-shadow: 0 0 10px -2px var(--c, var(--root));
+        }
+
+        svg.connectors {
+            position: absolute;
+            top: 0;
+            left: 0;
+            overflow: visible;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        svg.connectors path {
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        svg.connectors circle {
+            r: 3;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-wrap" id="canvas-wrap">
+        <div class="toolbar">
+            <button id="zoom-out">−</button>
+            <span class="zoom-label" id="zoom-label">100%</span>
+            <button id="zoom-in">+</button>
+            <button id="zoom-reset">Reset</button>
+            <div class="spacer"></div>
+            <button id="btn-expand">Expand All</button>
+            <button id="btn-collapse" style="margin-right: 8px;">Collapse All</button>
+        </div>
+        <div id="tree-scaled">
+            <div id="tree-inner"></div>
+        </div>
+    </div>
+
+    <footer style="position: fixed; bottom: 0; left: 0; right: 0; padding: 10px 28px; background: rgba(11, 18, 32, 0.85); backdrop-filter: blur(4px); border-top: 1px solid var(--panel-border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; z-index: 10;">
+        Created by <b>Bihar Digital Data & Network</b> (<a href="https://bddn.in" target="_blank" style="color: var(--root); text-decoration: none;">bddn.in</a>)
+    </footer>
+
+    <script>
+        const treeData = {"id":0,"title":"Data Analytics","detail":null,"children":[{"id":1,"title":"1. Foundational Concepts & Project Methodology","detail":null,"children":[{"id":2,"title":"Data Sources","detail":null,"children":[{"id":3,"title":"Primary Sources","detail":null,"children":[{"id":4,"title":"Survey","detail":null,"children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":5,"title":"Feedback","detail":null,"children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":6,"title":"Experiments","detail":null,"children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":7,"title":"IIoT (Industrial Internet of Things)","detail":null,"children":[],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"},{"id":8,"title":"Secondary Sources","detail":null,"children":[{"id":9,"title":"Databases","detail":null,"children":[{"id":10,"title":"RDBMS","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":11,"title":"SQL (Structured Query Language)","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"}],"collapsed":true,"depth":4,"color":"c1"},{"id":12,"title":"Flat files","detail":null,"children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":13,"title":"Web","detail":null,"children":[],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":14,"title":"Analytics Types","detail":null,"children":[{"id":15,"title":"Descriptive Analytics","detail":"What happened","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":16,"title":"Diagnostics Analytics","detail":"Why something happened","children":[],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":17,"title":"Mandatory Tools","detail":null,"children":[],"collapsed":true,"depth":2,"color":"c1"},{"id":18,"title":"Project Management Methodology for Data Analytics","detail":null,"children":[{"id":19,"title":"1a. Business Understanding","detail":null,"children":[{"id":20,"title":"Record Business Objective","detail":null,"children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":21,"title":"Record Business Constraints","detail":null,"children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":22,"title":"Success Criteria","detail":null,"children":[{"id":23,"title":"Business Success Criteria","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":24,"title":"ML Success Criteria","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":25,"title":"Economic Success Criteria","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"}],"collapsed":true,"depth":4,"color":"c1"},{"id":26,"title":"Project Charter","detail":null,"children":[{"id":27,"title":"Definition","detail":"The first document containing high-level details about the project","children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":28,"title":"Approval","detail":"Should be approved by the Project Sponsor","children":[],"collapsed":true,"depth":5,"color":"c1"}],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"},{"id":29,"title":"1b. Data Understanding","detail":null,"children":[{"id":30,"title":"Core Topics","detail":null,"children":[{"id":31,"title":"Data Types","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":32,"title":"Data Collection","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":33,"title":"Data Versioning","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":34,"title":"Data Description","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":35,"title":"Data Requirements","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":36,"title":"Data Verification","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":37,"title":"Data Preprocessing","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":38,"title":"Unsupervised Learning / Descriptive Analytics","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":39,"title":"Graphical Representation / Story Telling","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"}],"collapsed":true,"depth":4,"color":"c1"},{"id":40,"title":"Data Classifications","detail":null,"children":[{"id":41,"title":"Structured vs. Semi-Structured vs. Unstructured","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":42,"title":"Big Data vs. Regular Data","detail":null,"children":[{"id":43,"title":"Characteristics (4 V's)","detail":"Volume, Velocity, Variety, Veracity","children":[],"collapsed":true,"depth":6,"color":"c1"}],"collapsed":true,"depth":5,"color":"c1"},{"id":44,"title":"Cross-Sectional vs. Time Series vs. Longitudinal/Panel Data","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":45,"title":"Balanced vs. Imbalanced / Rare Data","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":46,"title":"Online/Live Streaming vs. Offline/Batch Data","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":47,"title":"Qualitative vs. Quantitative","detail":null,"children":[{"id":48,"title":"Continuous","detail":"Infinite options","children":[],"collapsed":true,"depth":6,"color":"c1"},{"id":49,"title":"Discrete","detail":"Finite/Fixed set of options","children":[],"collapsed":true,"depth":6,"color":"c1"}],"collapsed":true,"depth":5,"color":"c1"},{"id":50,"title":"Measurement Levels","detail":null,"children":[{"id":51,"title":"Binary, Nominal, Ordinal, Interval, Ratio","detail":null,"children":[],"collapsed":true,"depth":6,"color":"c1"}],"collapsed":true,"depth":5,"color":"c1"}],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"}],"collapsed":true,"depth":1,"color":"c1"},{"id":52,"title":"2. SQL & Relational Databases","detail":null,"children":[{"id":53,"title":"Database Overview","detail":null,"children":[{"id":54,"title":"Definition","detail":"Logical, consistent, and organized collection of data...","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":55,"title":"Database Management System (DBMS)","detail":"Collects data and runs programs to access/store it efficiently","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":56,"title":"Relational Database Management System (RDBMS)","detail":null,"children":[{"id":57,"title":"Supported Engines","detail":"MySQL, PostgreSQL, Microsoft SQL Server, Oracle Database","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":58,"title":"Definition","detail":"Mainatains data records and indices in tables; supports CRUD operations","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":59,"title":"ER Model Concepts","detail":null,"children":[{"id":60,"title":"Entity","detail":"Objects, classes, persons, or places (e.g., Student, Product, Department)","children":[],"collapsed":true,"depth":5,"color":"c2"},{"id":61,"title":"Attribute","detail":"Describes properties of an entity (e.g., Name, ID, Age)","children":[],"collapsed":true,"depth":5,"color":"c2"},{"id":62,"title":"Relation","detail":"One-to-One, One-to-Many, Many-to-One, Many-to-Many","children":[],"collapsed":true,"depth":5,"color":"c2"},{"id":63,"title":"Data Model","detail":null,"children":[],"collapsed":true,"depth":5,"color":"c2"}],"collapsed":true,"depth":4,"color":"c2"}],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":64,"title":"ACID Properties","detail":null,"children":[{"id":65,"title":"Atomicity","detail":"Complete execution or no execution at all","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":66,"title":"Consistency","detail":"Valid data state when a transaction starts and ends","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":67,"title":"Isolation","detail":"Concurrent transactions are invisible to each other","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":68,"title":"Durability","detail":"Transaction changes persist permanently even after system failure","children":[],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":69,"title":"Normalization","detail":null,"children":[{"id":70,"title":"Definition","detail":"Process of efficiently organizing data to eliminate redundancy and verify dependencies","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":71,"title":"Types of Normal Forms","detail":null,"children":[{"id":72,"title":"1NF (First Normal Form)","detail":null,"children":[{"id":73,"title":"Rules","detail":"Define columns, group related items, eliminate repeating groups, define primary key","children":[],"collapsed":true,"depth":5,"color":"c2"},{"id":74,"title":"Example","detail":"CREATE TABLE CUSTOMERS (ID, NAME, AGE, ADDRESS, ORDERS)","children":[],"collapsed":true,"depth":5,"color":"c2"}],"collapsed":true,"depth":4,"color":"c2"},{"id":75,"title":"2NF (Second Normal Form)","detail":null,"children":[{"id":76,"title":"Rules","detail":"Must meet all 1NF rules; no partial dependencies on the primary key","children":[],"collapsed":true,"depth":5,"color":"c2"},{"id":77,"title":"Example","detail":"CREATE TABLE CUSTOMERS (CUST_ID, CUST_NAME, ORDER_ID, ORDER_DETAIL, SALE_DATE)","children":[],"collapsed":true,"depth":5,"color":"c2"}],"collapsed":true,"depth":4,"color":"c2"},{"id":78,"title":"3NF (Third Normal Form)","detail":null,"children":[{"id":79,"title":"Rules","detail":"Must meet 2NF rules; all non-primary fields must depend strictly on the primary key","children":[],"collapsed":true,"depth":5,"color":"c2"},{"id":80,"title":"Example","detail":"CREATE TABLE CUSTOMERS (CUST_ID, CUST_NAME, DOB, STREET, CITY, STATE, ZIP, EMAIL_ID)","children":[],"collapsed":true,"depth":5,"color":"c2"}],"collapsed":true,"depth":4,"color":"c2"}],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":81,"title":"SQL Commands","detail":null,"children":[{"id":82,"title":"Definition","detail":"Instructions used to communicate with databases","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":83,"title":"DDL (Data Definition Language) - Auto-committed, alters structural schema","detail":null,"children":[{"id":84,"title":"CREATE","detail":"CREATE TABLE TABLE_NAME (COLUMN_NAME DATATYPES)","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":85,"title":"DROP","detail":"DROP TABLE table_name (deletes both structure and records permanently)","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":86,"title":"ALTER","detail":"ALTER TABLE table_name ADD/MODIFY (modifies the structure)","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":87,"title":"TRUNCATE","detail":"TRUNCATE TABLE table_name (deletes all rows and frees up space)","children":[],"collapsed":true,"depth":4,"color":"c2"}],"collapsed":true,"depth":3,"color":"c2"},{"id":88,"title":"DML (Data Manipulation Language) - Non-auto-committed, modifies row data (reversible via rollback)","detail":null,"children":[{"id":89,"title":"INSERT","detail":"INSERT INTO TABLE_NAME (cols) VALUES (vals)","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":90,"title":"UPDATE","detail":"UPDATE table_name SET col = val WHERE condition","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":91,"title":"DELETE","detail":"DELETE FROM table_name WHERE condition (removes specific rows)","children":[],"collapsed":true,"depth":4,"color":"c2"}],"collapsed":true,"depth":3,"color":"c2"},{"id":92,"title":"DCL (Data Control Language) - Manages permissions","detail":null,"children":[{"id":93,"title":"GRANT","detail":"GRANT SELECT, UPDATE ON table TO user","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":94,"title":"REVOKE","detail":"REVOKE SELECT, UPDATE ON table FROM user","children":[],"collapsed":true,"depth":4,"color":"c2"}],"collapsed":true,"depth":3,"color":"c2"},{"id":95,"title":"TCL (Transaction Control Language) - Manages transaction flows","detail":null,"children":[{"id":96,"title":"COMMIT","detail":"Saves transactions to the database (COMMIT;)","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":97,"title":"ROLLBACK","detail":"Undoes unsaved transactions (ROLLBACK;)","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":98,"title":"SAVEPOINT","detail":"Partitions transaction rollbacks (SAVEPOINT savepoint_name;)","children":[],"collapsed":true,"depth":4,"color":"c2"}],"collapsed":true,"depth":3,"color":"c2"},{"id":99,"title":"DQL (Data Query Language) - Retrieves data","detail":null,"children":[{"id":100,"title":"SELECT","detail":"select * from table; / select column1, column2 from table;","children":[],"collapsed":true,"depth":4,"color":"c2"}],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":101,"title":"SQL Datatypes & Operators","detail":null,"children":[{"id":102,"title":"Datatypes","detail":"Binary, Numeric, Extract Numeric, String, Date","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":103,"title":"Operators","detail":null,"children":[{"id":104,"title":"Arithmetic","detail":"+, -, *, /, % (addition, subtraction, multiplication, division, modulo reminder)","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":105,"title":"Comparison","detail":"=, !=, <>, >, <, >=, <=, !<, !>","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":106,"title":"Logical","detail":"ALL, AND, ANY, BETWEEN, IN, NOT, OR, EXIST, LIKE","children":[],"collapsed":true,"depth":4,"color":"c2"}],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":107,"title":"SQL Constraints","detail":null,"children":[{"id":108,"title":"Syntax","detail":"CREATE TABLE table_name (column datatype constraint)","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":109,"title":"NOT NULL","detail":"Ensures columns cannot have NULL values","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":110,"title":"DEFAULT","detail":"Provides a default value when none is specified","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":111,"title":"UNIQUE","detail":"Guarantees unique values in a column","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":112,"title":"PRIMARY KEY","detail":"Uniquely identifies each record","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":113,"title":"FOREIGN KEY","detail":"References unique key/record in another table","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":114,"title":"CHECK","detail":"Verifies values satisfy given conditions","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":115,"title":"INDEX","detail":"Speed-optimizing lookup table","children":[],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":116,"title":"SQL Joins","detail":null,"children":[{"id":117,"title":"Definition","detail":"Combined queries merging columns from multiple tables","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":118,"title":"Types of Joins","detail":null,"children":[{"id":119,"title":"INNER","detail":"Matches and combines records shared between tables","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":120,"title":"LEFT","detail":"Extracts all left records and matching right records (returns NULL for mismatches)","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":121,"title":"RIGHT","detail":"Extracts all right records and matching left records (returns NULL for mismatches)","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":122,"title":"FULL","detail":"Combination of left and right joins (displays NULL for unmatched pairings)","children":[],"collapsed":true,"depth":4,"color":"c2"},{"id":123,"title":"CROSS JOIN","detail":"Generates cartesian product (all possible combinations)","children":[],"collapsed":true,"depth":4,"color":"c2"}],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":124,"title":"SQL Clauses & Filters","detail":null,"children":[{"id":125,"title":"Groupby","detail":"Groups rows sharing identical attribute values for aggregation","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":126,"title":"Having","detail":"Filters groups based on search conditions (applied alongside GROUP BY)","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":127,"title":"Order by","detail":"Sorts result-set ascending (ASC) or descending (DESC)","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":128,"title":"LIMIT & OFFSET","detail":"Restricts the output volume","children":[],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":129,"title":"SQL Functions","detail":null,"children":[{"id":130,"title":"Aggregate Functions","detail":"count, sum, AVG, MAX, MIN","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":131,"title":"Arithmetic/Math Functions","detail":"abs(), ceil(), floor(), exp(), in(), mod(), power(), sqrt(), ln()","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":132,"title":"Character/String Functions","detail":"lower(), upper(), trim(), translate()","children":[],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":133,"title":"SQL Expressions","detail":null,"children":[{"id":134,"title":"BOOLEAN","detail":"Single value matching expression (e.g., WHERE matching)","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":135,"title":"NUMERIC","detail":"Mathematical operations (e.g., SELECT numerical_expression)","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":136,"title":"DATE","detail":"Date-time operations (e.g., SELECT CURRENT_TIMESTAMP / GETDATE)","children":[],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":137,"title":"Set Operations","detail":null,"children":[{"id":138,"title":"UNION","detail":"Merges distinct rows across queries (excludes duplicate rows, defaults to first column sort)","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":139,"title":"UNION ALL","detail":"Merges rows across queries (retains duplicate rows, does not sort)","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":140,"title":"INTERSECT","detail":"Returns unique common rows (excludes duplicates, defaults to ascending sort)","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":141,"title":"MINUS","detail":"Displays rows in the first query but absent in the second query","children":[],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":142,"title":"SQL Subqueries","detail":null,"children":[{"id":143,"title":"Definition","detail":"Nested query inside SQL statements (WHERE, FROM, or HAVING clause)","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":144,"title":"Syntax","detail":"SELECT col FROM table1 WHERE col IN (SELECT col FROM table2 WHERE condition)","children":[],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":145,"title":"SQL Views","detail":null,"children":[{"id":146,"title":"Definition","detail":"Virtual tables based on queries (CREATE VIEW view_name AS SELECT...)","children":[],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":147,"title":"SQL Triggers","detail":null,"children":[{"id":148,"title":"Definition","detail":"Automated procedural code executed before/after specific table actions","children":[],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"},{"id":149,"title":"SQL Indexes","detail":null,"children":[{"id":150,"title":"Definition","detail":"Specialized lookup tables designed to accelerate data retrieval","children":[],"collapsed":true,"depth":3,"color":"c2"},{"id":151,"title":"Operations","detail":"CREATE INDEX, CREATE UNIQUE INDEX, DROP INDEX","children":[],"collapsed":true,"depth":3,"color":"c2"}],"collapsed":true,"depth":2,"color":"c2"}],"collapsed":true,"depth":1,"color":"c2"},{"id":152,"title":"3. Advanced Excel","detail":null,"children":[{"id":153,"title":"Introduction to Excel","detail":null,"children":[{"id":154,"title":"Interface Elements","detail":"Quick Access Toolbar, Ribbon, Cell & Address Bar, Formula Bar","children":[],"collapsed":true,"depth":3,"color":"c3"},{"id":155,"title":"Document Hierarchy","detail":"Workbook (file) vs. Worksheet (single sheet page)","children":[],"collapsed":true,"depth":3,"color":"c3"}],"collapsed":true,"depth":2,"color":"c3"},{"id":156,"title":"Cell Referencing","detail":null,"children":[{"id":157,"title":"Relative","detail":"Automatically adjusts when copied (e.g., B2)","children":[],"collapsed":true,"depth":3,"color":"c3"},{"id":158,"title":"Absolute","detail":"Remains completely fixed (e.g., $A$1)","children":[],"collapsed":true,"depth":3,"color":"c3"},{"id":159,"title":"Mixed","detail":"Partially locks row or column dynamically (e.g., $A1, A$1)","children":[],"collapsed":true,"depth":3,"color":"c3"}],"collapsed":true,"depth":2,"color":"c3"},{"id":160,"title":"Conditional Formatting","detail":null,"children":[{"id":161,"title":"Formatting Types","detail":"Highlight Cell Rules, Top to Bottom Rules, Data Bars, Color Scales, Icon Sets","children":[],"collapsed":true,"depth":3,"color":"c3"},{"id":162,"title":"Operations","detail":"Clear Rules, Highlight One Column Value, Highlight Entire Column","children":[],"collapsed":true,"depth":3,"color":"c3"}],"collapsed":true,"depth":2,"color":"c3"},{"id":163,"title":"Excel Functions","detail":null,"children":[{"id":164,"title":"Text Functions","detail":"Is Text, Text, Find, Concat, Exact, Trim, Proper, Lower, Upper, Mid, Rept, Left, Right, Concatenate","children":[],"collapsed":true,"depth":3,"color":"c3"},{"id":165,"title":"DateTime Functions","detail":"Today, Now, Day, Month, Year, Date, Networkdays, Networkdays.intl, DateDif, WeekNum, IsoWeekNum","children":[],"collapsed":true,"depth":3,"color":"c3"},{"id":166,"title":"Mathematical/Arithmetic","detail":"Sum, Min, Max, Average, Count, Auto Sum, Median, Mod, Power, Product, Trunc, Sequence, Randbetween, Unique, Choose, Replace","children":[],"collapsed":true,"depth":3,"color":"c3"},{"id":167,"title":"Logical & Lookup","detail":"IF, Nested If, And, OR, Count If, VlookUp, XLOOKUP, Index, MATCH, Index and Match, Search, Maps","children":[],"collapsed":true,"depth":3,"color":"c3"}],"collapsed":true,"depth":2,"color":"c3"},{"id":168,"title":"Charts in Excel","detail":null,"children":[{"id":169,"title":"Types","detail":"Column Chart, Pie Chart, Line Chart, Pivot Chart","children":[],"collapsed":true,"depth":3,"color":"c3"}],"collapsed":true,"depth":2,"color":"c3"},{"id":170,"title":"Macros & VBA Programming","detail":null,"children":[{"id":171,"title":"1. Introduction to Macros","detail":null,"children":[{"id":172,"title":"Definition & Purpose","detail":"Task automation scripts used to eliminate repetitive manual processing","children":[],"collapsed":true,"depth":4,"color":"c3"},{"id":173,"title":"Benefits","detail":"Time-saving, error reduction, consistency, increased productivity","children":[],"collapsed":true,"depth":4,"color":"c3"},{"id":174,"title":"Applications","detail":"Automatic report templates, custom functions, data manipulation","children":[],"collapsed":true,"depth":4,"color":"c3"}],"collapsed":true,"depth":3,"color":"c3"},{"id":175,"title":"2. Recording Macros","detail":null,"children":[{"id":176,"title":"Setup","detail":"Enable the \"Developer\" tab in Excel options to access the record features","children":[],"collapsed":true,"depth":4,"color":"c3"}],"collapsed":true,"depth":3,"color":"c3"},{"id":177,"title":"3. Editing Macros","detail":null,"children":[{"id":178,"title":"Access","detail":"Open the Visual Basic Editor (VBE) via the Developer tab","children":[],"collapsed":true,"depth":4,"color":"c3"},{"id":179,"title":"Review","detail":"Examine recorded macro structures inside the code window","children":[],"collapsed":true,"depth":4,"color":"c3"},{"id":180,"title":"Modification","detail":"Enhance recorded scripts using custom programming structures","children":[],"collapsed":true,"depth":4,"color":"c3"}],"collapsed":true,"depth":3,"color":"c3"},{"id":181,"title":"4. VBA Syntax and Language","detail":null,"children":[{"id":182,"title":"Variables","detail":"Declared using the \"Dim\" statement","children":[],"collapsed":true,"depth":4,"color":"c3"},{"id":183,"title":"Procedures","detail":null,"children":[{"id":184,"title":"Sub Procedures","detail":"Execute actions (e.g., Sub SayHello())","children":[],"collapsed":true,"depth":5,"color":"c3"},{"id":185,"title":"Function Procedures","detail":"Perform tasks and return values (e.g., Function AddNumbers())","children":[],"collapsed":true,"depth":5,"color":"c3"}],"collapsed":true,"depth":4,"color":"c3"},{"id":186,"title":"Guidelines","detail":"Write statements on separate lines; end statements with line breaks or colons (\":\")","children":[],"collapsed":true,"depth":4,"color":"c3"}],"collapsed":true,"depth":3,"color":"c3"},{"id":187,"title":"5. Working with Objects","detail":null,"children":[{"id":188,"title":"Object Hierarchy","detail":"Structure of nested items (Application -> Workbook -> Worksheet -> Range)","children":[],"collapsed":true,"depth":4,"color":"c3"},{"id":189,"title":"Object Variables","detail":"Set references using the \"Set\" keyword","children":[],"collapsed":true,"depth":4,"color":"c3"},{"id":190,"title":"Properties & Methods","detail":"Read/write attributes or execute actions (e.g., .Show, .Worksheets)","children":[],"collapsed":true,"depth":4,"color":"c3"}],"collapsed":true,"depth":3,"color":"c3"},{"id":191,"title":"6. Control Structures","detail":null,"children":[{"id":192,"title":"Loops","detail":"For Loops (repeat fixed times), While Loops (run until condition is false)","children":[],"collapsed":true,"depth":4,"color":"c3"},{"id":193,"title":"Conditional Statements","detail":"If-Then-Else, Select Case","children":[],"collapsed":true,"depth":4,"color":"c3"}],"collapsed":true,"depth":3,"color":"c3"},{"id":194,"title":"7. User Forms","detail":null,"children":[{"id":195,"title":"Implementation steps","detail":"Interface Design (Toolbox controls), Event Handling, Data Validation","children":[],"collapsed":true,"depth":4,"color":"c3"},{"id":196,"title":"Execution","detail":"Call forms via the \".Show\" method","children":[],"collapsed":true,"depth":4,"color":"c3"}],"collapsed":true,"depth":3,"color":"c3"}],"collapsed":true,"depth":2,"color":"c3"}],"collapsed":true,"depth":1,"color":"c3"},{"id":197,"title":"4. Python Programming","detail":null,"children":[{"id":198,"title":"Overview & History","detail":null,"children":[{"id":199,"title":"History","detail":"Developed by Guido Van Rossum, released in 1991, named after Monty Python","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":200,"title":"Language Features","detail":"General-purpose, open-source, interpreted, interactive, object-oriented, functional, modular, portable, rich ecosystem","children":[],"collapsed":true,"depth":3,"color":"c4"}],"collapsed":true,"depth":2,"color":"c4"},{"id":201,"title":"Integrated Development Environment (IDE)","detail":null,"children":[{"id":202,"title":"Local IDEs","detail":"Spyder, Jupyter Notebook, PyCharm (distributed via Anaconda)","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":203,"title":"Cloud Based IDEs","detail":"Google Colab, Amazon SageMaker Studio Lab, PythonAnywhere, Kaggle kernel","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":204,"title":"Hardware Accelerators","detail":"CPU, GPU, TPU","children":[],"collapsed":true,"depth":3,"color":"c4"}],"collapsed":true,"depth":2,"color":"c4"},{"id":205,"title":"Variables in Python","detail":null,"children":[{"id":206,"title":"Concept","detail":"Named pointers referencing specific memory locations","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":207,"title":"Naming Rules","detail":"Alphabet/underscore start, alphanumeric characters, case-sensitive, no restricted keywords","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":208,"title":"Scope","detail":"Local Variables vs. Global Variables","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":209,"title":"Keyword Audit","detail":"import keyword; keyword.kwlist","children":[],"collapsed":true,"depth":3,"color":"c4"}],"collapsed":true,"depth":2,"color":"c4"},{"id":210,"title":"Python Operators","detail":null,"children":[{"id":211,"title":"Arithmetic","detail":"+, -, *, /, //, %, **","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":212,"title":"Relational / Comparison","detail":"==, !=, >, <, >=, <=","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":213,"title":"Assignment","detail":"=, +=, -=, *=, /=, //=, %=, **=","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":214,"title":"Logical","detail":"and, or, not","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":215,"title":"Identity","detail":"is, is not","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":216,"title":"Membership","detail":"in, not in","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":217,"title":"Bitwise","detail":"& (AND), | (OR)","children":[],"collapsed":true,"depth":3,"color":"c4"}],"collapsed":true,"depth":2,"color":"c4"},{"id":218,"title":"Data Types in Python","detail":null,"children":[{"id":219,"title":"Numeric","detail":"Integer, Float, Complex","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":220,"title":"Non-Numeric","detail":"Boolean (True, False)","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":221,"title":"Sequential (Iterables)","detail":null,"children":[{"id":222,"title":"Strings","detail":"Single, double, or triple-quoted text, immutable sequence, supports formatting (format, f-string, %s, %d)","children":[],"collapsed":true,"depth":4,"color":"c4"},{"id":223,"title":"List","detail":"Defined with brackets [ ], mutable, ordered, indexed, allows duplicate values and mixed datatypes","children":[],"collapsed":true,"depth":4,"color":"c4"},{"id":224,"title":"Tuple","detail":"Defined with parentheses ( ), immutable, ordered, indexed, fixed-length","children":[],"collapsed":true,"depth":4,"color":"c4"},{"id":225,"title":"Set","detail":"Defined with braces { }, mutable (except frozenset), unordered, unindexed, unique values only","children":[],"collapsed":true,"depth":4,"color":"c4"}],"collapsed":true,"depth":3,"color":"c4"},{"id":226,"title":"Dictionary","detail":"Defined with braces { }, structured as key-value pairs (keys must be immutable/unique, values are mutable)","children":[],"collapsed":true,"depth":3,"color":"c4"}],"collapsed":true,"depth":2,"color":"c4"},{"id":227,"title":"Control Flow","detail":null,"children":[{"id":228,"title":"Conditional Statements","detail":"If, If-Else, If-Else-If (elif), Nested If","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":229,"title":"Loops","detail":"Finite (for loop) vs. Infinite (while loop)","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":230,"title":"Loop Control","detail":"break() (stops loop), continue() (skips iteration), pass() (acts as an empty placeholder)","children":[],"collapsed":true,"depth":3,"color":"c4"}],"collapsed":true,"depth":2,"color":"c4"},{"id":231,"title":"Libraries & Packages","detail":null,"children":[{"id":232,"title":"Installation","detail":"pip install / conda install","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":233,"title":"Core Data Science Libraries","detail":"numpy, pandas, scipy, scikit-learn (sklearn), matplotlib, seaborn, statsmodels","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":234,"title":"String Patterns","detail":"Regular Expressions (import re)","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":235,"title":"Deep Learning Frameworks","detail":"PyTorch, Tensorflow, Keras","children":[],"collapsed":true,"depth":3,"color":"c4"}],"collapsed":true,"depth":2,"color":"c4"},{"id":236,"title":"Python Functions","detail":null,"children":[{"id":237,"title":"Categories","detail":"built-in functions (print, type, help, open) vs. custom defined functions (def, lambda/anonymous)","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":238,"title":"Types of Arguments","detail":"Formal, Actual, Positional, Keyword, Key-Value, Variable","children":[],"collapsed":true,"depth":3,"color":"c4"}],"collapsed":true,"depth":2,"color":"c4"},{"id":239,"title":"Miscellaneous Formatting","detail":null,"children":[{"id":240,"title":"Newline character","detail":"\\n","children":[],"collapsed":true,"depth":3,"color":"c4"}],"collapsed":true,"depth":2,"color":"c4"},{"id":241,"title":"Exception Handling","detail":null,"children":[{"id":242,"title":"Structure","detail":"try block, except block","children":[],"collapsed":true,"depth":3,"color":"c4"},{"id":243,"title":"Built-in Exceptions","detail":"ZeroDivisionError, IndexError, KeyError, EOFError","children":[],"collapsed":true,"depth":3,"color":"c4"}],"collapsed":true,"depth":2,"color":"c4"}],"collapsed":true,"depth":1,"color":"c4"},{"id":244,"title":"5. Exploratory Data Analysis (EDA) & Data Prep","detail":null,"children":[{"id":245,"title":"Core Concepts","detail":null,"children":[{"id":246,"title":"Exploratory Data Analysis (EDA)","detail":null,"children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":247,"title":"Data Wrangling (Cleaning / Munging / Manipulation)","detail":null,"children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":248,"title":"Feature Engineering (Feature Selection, Feature Extraction)","detail":null,"children":[],"collapsed":true,"depth":3,"color":"c5"}],"collapsed":true,"depth":2,"color":"c5"},{"id":249,"title":"Analysis Levels","detail":"Univariate, Bivariate, Multivariate","children":[],"collapsed":true,"depth":2,"color":"c5"},{"id":250,"title":"Business Moments (Data Distribution Decisions)","detail":null,"children":[{"id":251,"title":"1st Moment","detail":"Measures of Central Tendency (Mean, Median, Mode)","children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":252,"title":"2nd Moment","detail":"Measures of Dispersion (Range = Min-Max, Variance, Standard Deviation)","children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":253,"title":"3rd Moment","detail":"Skewness (Negative/Left Skewed, No Skewness, Positive/Right Skewed)","children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":254,"title":"4th Moment","detail":"Kurtosis (Leptokurtic/Sharp, Mesokurtic/Normal, Platykurtic/Wide)","children":[],"collapsed":true,"depth":3,"color":"c5"}],"collapsed":false,"depth":2,"color":"c5"},{"id":255,"title":"Data Distribution Analysis","detail":"Discrete vs. Continuous Data Distribution","children":[],"collapsed":true,"depth":2,"color":"c5"},{"id":256,"title":"Data Preparation Techniques","detail":null,"children":[{"id":257,"title":"Typecasting & Handling Duplicates","detail":null,"children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":258,"title":"Outlier Analysis / Treatment","detail":null,"children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":259,"title":"Zero or Near Zero Variance Features","detail":null,"children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":260,"title":"Discretization / Binning / Grouping","detail":null,"children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":261,"title":"Encoding / Dummy Variable Creation","detail":null,"children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":262,"title":"Missing Value Analysis & Imputation","detail":null,"children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":263,"title":"Data Transformation & String Data Manipulation","detail":null,"children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":264,"title":"Feature Scaling / Shrinking","detail":null,"children":[],"collapsed":true,"depth":3,"color":"c5"}],"collapsed":true,"depth":2,"color":"c5"},{"id":265,"title":"Machine Learning Operations","detail":"Clustering / Segmentation & Dimension Reduction","children":[],"collapsed":true,"depth":2,"color":"c5"},{"id":266,"title":"Graphical Representation / Story Telling","detail":null,"children":[{"id":267,"title":"Univariate Plots","detail":"Bar plot, Index plot, Line plot, Dot chart, Strip plot, Violin plot, Stem & Leaf, Candle, Pie, Histogram, Density, Boxplot, Time plot, Q-Q plot","children":[],"collapsed":true,"depth":3,"color":"c5"},{"id":268,"title":"Bivariate & Multivariate Plots","detail":"Scatter plot, Pairs plot, Correlation plot / Heat map, Interaction plot","children":[],"collapsed":true,"depth":3,"color":"c5"}],"collapsed":true,"depth":2,"color":"c5"},{"id":269,"title":"AutoEDA Tools","detail":null,"children":[{"id":270,"title":"Libraries","detail":"Sweetviz, Autoviz, D-Tale, Pandas Profiling, Data Prep","children":[],"collapsed":true,"depth":3,"color":"c5"}],"collapsed":true,"depth":2,"color":"c5"}],"collapsed":true,"depth":1,"color":"c5"},{"id":271,"title":"6. Power BI","detail":null,"children":[{"id":272,"title":"Introduction to Power BI","detail":null,"children":[{"id":273,"title":"Definition","detail":"Microsoft self-service BI platform for cloud and on-premise deployments","children":[],"collapsed":true,"depth":3,"color":"c6"},{"id":274,"title":"Purpose","detail":"Dynamic report design, aggregate processing, data visualization, and sharing dashboards","children":[],"collapsed":true,"depth":3,"color":"c6"}],"collapsed":true,"depth":2,"color":"c6"},{"id":275,"title":"Data Types","detail":null,"children":[{"id":276,"title":"Categories","detail":"Text, Whole number, Decimal number, Date/Time, Boolean, Currency, Duration, Percentage, Geographical, Binary, Auto-generated ID, Web URL","children":[],"collapsed":true,"depth":3,"color":"c6"}],"collapsed":true,"depth":2,"color":"c6"},{"id":277,"title":"Power BI Ecosystem","detail":null,"children":[{"id":278,"title":"Power BI Desktop","detail":"Local development client","children":[],"collapsed":true,"depth":3,"color":"c6"},{"id":279,"title":"Power BI Service","detail":"Cloud-based reporting platform","children":[],"collapsed":true,"depth":3,"color":"c6"},{"id":280,"title":"Power BI App","detail":"Mobile application facility","children":[],"collapsed":true,"depth":3,"color":"c6"}],"collapsed":true,"depth":2,"color":"c6"},{"id":281,"title":"Views in Power BI Desktop","detail":null,"children":[{"id":282,"title":"Report View","detail":"Visual drag-and-drop workspace (Default)","children":[],"collapsed":true,"depth":3,"color":"c6"},{"id":283,"title":"Data View","detail":"Tabular view containing underlying database records","children":[],"collapsed":true,"depth":3,"color":"c6"},{"id":284,"title":"Model View","detail":"Relationship mapping and modeling workspace","children":[],"collapsed":true,"depth":3,"color":"c6"}],"collapsed":true,"depth":2,"color":"c6"},{"id":285,"title":"Connectivity & Power Query","detail":null,"children":[{"id":286,"title":"Data Sources","detail":"SQL connection, Python connection, R connection","children":[],"collapsed":true,"depth":3,"color":"c6"},{"id":287,"title":"Power Query Editor","detail":"Preview data, filter subsets, apply transformation steps","children":[],"collapsed":true,"depth":3,"color":"c6"}],"collapsed":true,"depth":2,"color":"c6"},{"id":288,"title":"DAX (Data Analysis Expressions) Language","detail":null,"children":[{"id":289,"title":"Purpose","detail":"Custom calculation and measures generation engine","children":[],"collapsed":true,"depth":3,"color":"c6"},{"id":290,"title":"Calculation Types","detail":null,"children":[{"id":291,"title":"Calculated Columns","detail":"Created via \"New Column\" inside Data View","children":[],"collapsed":true,"depth":4,"color":"c6"},{"id":292,"title":"Calculated Measures","detail":"Created via \"New Measure\" inside Data View","children":[],"collapsed":true,"depth":4,"color":"c6"}],"collapsed":true,"depth":3,"color":"c6"},{"id":293,"title":"Key Functions","detail":null,"children":[{"id":294,"title":"CALCULATE","detail":"Calculate(\"column1\", filter=(\"column2\"))","children":[],"collapsed":true,"depth":4,"color":"c6"},{"id":295,"title":"SUMX","detail":"SUMX(\"Column1\")","children":[],"collapsed":true,"depth":4,"color":"c6"},{"id":296,"title":"Average","detail":"Average(\"Column1\")","children":[],"collapsed":true,"depth":4,"color":"c6"},{"id":297,"title":"IF","detail":"IF(Sales[column1] > 1000, \"High\", \"Low\")","children":[],"collapsed":true,"depth":4,"color":"c6"},{"id":298,"title":"RELATED","detail":null,"children":[],"collapsed":true,"depth":4,"color":"c6"},{"id":299,"title":"CONCATENATE","detail":"CONCATENATE(Users[First Name], \" \", Users[Last Name])","children":[],"collapsed":true,"depth":4,"color":"c6"},{"id":300,"title":"DATE","detail":"CALCULATE(SUM(column1), DATESMTD(DATEADD(Calendar[Date], -1, MONTH)))","children":[],"collapsed":true,"depth":4,"color":"c6"}],"collapsed":true,"depth":3,"color":"c6"}],"collapsed":true,"depth":2,"color":"c6"},{"id":301,"title":"Power BI Visualizations (Charts)","detail":null,"children":[{"id":302,"title":"Chart Types","detail":"Stacked bar/column, Clustered bar/column, Line, Area, Stacked area, Line & stacked/clustered column, Ribbon, Funnel, Scatter, Pie, Donut, Treemap","children":[],"collapsed":true,"depth":3,"color":"c6"}],"collapsed":true,"depth":2,"color":"c6"},{"id":303,"title":"Data Modeling & Gateway","detail":null,"children":[{"id":304,"title":"Topics","detail":"Data transformation, Data modeling, Data Connectivity, Data Gateway","children":[],"collapsed":true,"depth":3,"color":"c6"}],"collapsed":true,"depth":2,"color":"c6"},{"id":305,"title":"Row Level Security (RLS)","detail":null,"children":[{"id":306,"title":"Purpose","detail":"Role-based filtering to restrict table row access","children":[],"collapsed":true,"depth":3,"color":"c6"},{"id":307,"title":"Types","detail":"Static RLS (fixed role rules) vs. Dynamic RLS (rules change by user context)","children":[],"collapsed":true,"depth":3,"color":"c6"}],"collapsed":true,"depth":2,"color":"c6"},{"id":308,"title":"Publishing, Sharing & Collaboration","detail":null,"children":[{"id":309,"title":"Actions","detail":"Publish reports, Manage permissions, Navigate workspaces","children":[],"collapsed":true,"depth":3,"color":"c6"},{"id":310,"title":"Workspaces (e.g., My Workspace)","detail":null,"children":[{"id":311,"title":"Supported Assets","detail":"Dashboard, Reports, Datasets, Data Flow, Streaming Dataset","children":[],"collapsed":true,"depth":4,"color":"c6"}],"collapsed":true,"depth":3,"color":"c6"}],"collapsed":true,"depth":2,"color":"c6"}],"collapsed":true,"depth":1,"color":"c6"},{"id":312,"title":"7. Tableau","detail":null,"children":[{"id":313,"title":"Introduction to Tableau","detail":null,"children":[{"id":314,"title":"Data Visualization Principles","detail":null,"children":[{"id":315,"title":"Definition","detail":"Visual representation and study of structured data","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":316,"title":"Cognition Limits","detail":"Contrasts detection, familiar patterns, working memory limits","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":317,"title":"Tufte's Data Integrity Rules (Edward Tufte)","detail":null,"children":[{"id":318,"title":"Minimise the lie factor","detail":"Axis must start with 0","children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":319,"title":"Present data in context","detail":"Contextualize positive/negative correlations","children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":320,"title":"Use Consistent Scales","detail":"Consistent scales (distance, weight, capacity)","children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":321,"title":"Standardize monetary units","detail":"Use a uniform currency value","children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":322,"title":"Show the data","detail":"Optimize the Data-Ink Ratio","children":[],"collapsed":true,"depth":5,"color":"c1"}],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"},{"id":323,"title":"Installation and Component Suite","detail":null,"children":[{"id":324,"title":"Tableau Desktop","detail":"Local development (Paid, 14-day trial, 100s of sources, secure connection, Live/Extract modes)","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":325,"title":"Tableau Server","detail":"On-premise/Private cloud (Secure storage, sharing, role-based access)","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":326,"title":"Tableau Cloud","detail":"Managed cloud version of Server","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":327,"title":"Tableau Data Prep","detail":"Data cleaning and preparation tool","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":328,"title":"Tableau Public","detail":"Free client with limitations (Flat files only, local data only, no saving as image/PDF/PPT, no geocoding)","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":329,"title":"Tableau Reader","detail":"View downloaded workbooks/packaged files (.twbx)","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":330,"title":"Tableau Mobile","detail":"Mobile access via Server/Cloud","children":[],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"},{"id":331,"title":"Saving Options","detail":null,"children":[{"id":332,"title":"Formats","detail":"Workbook (.twb), Packaged workbook (.twbx), Image (.png), PDF, PowerPoint Presentation","children":[],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"},{"id":333,"title":"Core Concepts","detail":null,"children":[{"id":334,"title":"Tableau Public Gallery","detail":null,"children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":335,"title":"Continuous vs. Discrete Data","detail":null,"children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":336,"title":"Measure vs. Dimension","detail":null,"children":[{"id":337,"title":"Dimension","detail":"Qualitative values (names, dates)","children":[],"collapsed":true,"depth":5,"color":"c1"},{"id":338,"title":"Measure","detail":"Quantitative/numeric values (sales, profit)","children":[],"collapsed":true,"depth":5,"color":"c1"}],"collapsed":true,"depth":4,"color":"c1"},{"id":339,"title":"Generated Fields","detail":"Automatic fields not present in original source","children":[],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":340,"title":"Tableau Architecture","detail":null,"children":[],"collapsed":true,"depth":2,"color":"c1"},{"id":341,"title":"Data Connections, Blending & Extraction","detail":null,"children":[{"id":342,"title":"Data Connections","detail":null,"children":[{"id":343,"title":"Single Database Joins","detail":"Inner Join, Left Join, Right Join, Full Join (Drag and drop interface)","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":344,"title":"Cross Database Connectivity (v10.0+)","detail":"Join across different sources (File-File, File-Server, Server-Server)","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":345,"title":"Unions","detail":"Appends rows across identical structures (within same datasource)","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":346,"title":"Custom SQL","detail":"Runs direct relational queries","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":347,"title":"Data Interpreter","detail":"Smart cleaning tool","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":348,"title":"Relationships","detail":"Represented by a flexible noodle structure","children":[],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"},{"id":349,"title":"Data Blending","detail":"Combine multiple sources without direct database joins","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":350,"title":"Data Extraction","detail":"Performance-optimizing subsets of data","children":[],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":351,"title":"Organizing & Simplifying Data","detail":null,"children":[{"id":352,"title":"Sorting","detail":"Sort from axis, header, toolbar, drag-and-drop, sort by field","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":353,"title":"Filtering","detail":"Extract filters, Data source filters, Worksheet filters, Dimension/Measure filters, Context filters, Cascading filters","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":354,"title":"Groups","detail":"Combine dimension members (Visual vs. Dimension groups)","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":355,"title":"Sets & Combined Sets","detail":"Custom fields defining subsets based on conditions","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":356,"title":"Hierarchies","detail":"Structured levels within a dimension for drill-downs","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":357,"title":"Folders","detail":"Grouping relevant fields at one location (Windows-like structure)","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":358,"title":"Highlighters","detail":"Emphasize specific data points in visualizations","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":359,"title":"Split & Custom Split","detail":"Break down poorly formatted data","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":360,"title":"Hide","detail":"Hide unused fields","children":[],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":361,"title":"Visual Analytics (Charts & Layouts)","detail":null,"children":[{"id":362,"title":"Basic Charts","detail":"Bar graphs, Line and Area, Circle View, Bubble, Pie, Text Table & Highlight Table","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":363,"title":"Advanced Visualization Concepts","detail":null,"children":[{"id":364,"title":"Dual Axis Charts","detail":"Show relationship between two variables on separate axes","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":365,"title":"Blended Axis Charts","detail":"Combine multiple measures into a single axis","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":366,"title":"Heat Maps","detail":"Color-based comparison across two categories","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":367,"title":"Tree Maps","detail":"Nested rectangles representing hierarchical data proportions","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":368,"title":"Gantt Charts","detail":"Start/finish dates of project tasks","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":369,"title":"Bullet Graphs","detail":"Variation of bar graph to replace gauges/meters","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":370,"title":"Reference Elements","detail":"Reference lines, reference bands, reference distributions","children":[],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"},{"id":371,"title":"Advanced Analytics Options","detail":null,"children":[{"id":372,"title":"Scatter Plots","detail":"Dual continuous variable relationships","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":373,"title":"Trend Lines","detail":"Price-point lines tracking trend strength","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":374,"title":"Forecasting","detail":"Trend extrapolation based on historical data","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":375,"title":"Clustering","detail":"Attribute-based grouping of data points","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":376,"title":"Distribution Analysis","detail":"Histograms, Frequency distributions, Box & Whisker plots","children":[],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":377,"title":"Mapping in Tableau","detail":null,"children":[{"id":378,"title":"Geographic Roles","detail":"Associates data with latitude/longitude","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":379,"title":"Map Types","detail":"Filled Maps (color gradient), Symbol Maps (shapes), Combination Maps (filled + symbol), Pie Mark Maps, Polygon Maps","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":380,"title":"Map Layers & Data Layers","detail":"Logical grouping of background elements and data","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":381,"title":"Customizations","detail":"Edit unrecognized locations, Custom Geocoding, Custom Territories, WMS Servers, Background Images, Map Search","children":[],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":382,"title":"Calculation in Tableau","detail":null,"children":[{"id":383,"title":"Types","detail":"Numeric, String, Date, Logic, Ad Hoc, Quick Table, Aggregations, Data Type Conversions","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":384,"title":"Calculated Fields","detail":"Combining existing data for new analytical elements","children":[],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":385,"title":"Level of Detail (LOD) Expressions","detail":null,"children":[{"id":386,"title":"Definition","detail":"Calculations computing values at specific levels of granularity without blending/duplication","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":387,"title":"Types of LODs","detail":null,"children":[{"id":388,"title":"Fixed LOD","detail":"Compute values using specified dimension ignoring view dimensions","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":389,"title":"Included LOD","detail":"Compute values using specified dimension in addition to view dimensions","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":390,"title":"Excluded LOD","detail":"Subtract dimension from the view level of detail","children":[],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":391,"title":"Custom Charts","detail":null,"children":[{"id":392,"title":"Types","detail":"Pareto Chart, Statistical Control Chart, Funnel Chart, Donut Chart, Motion/Animation chart","children":[],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":393,"title":"Actions (Interactions)","detail":null,"children":[{"id":394,"title":"Application","detail":"Sheet Level Actions vs. Dashboard Level Actions","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":395,"title":"Types of Actions","detail":"Filter Actions, Highlight Actions, URL Actions, Go to Sheet, Change Parameter, Change Set values","children":[],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":396,"title":"Parameters & Actions","detail":null,"children":[{"id":397,"title":"Parameters","detail":"Dynamic value replacement in calculations, filters, sets, reference lines","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":398,"title":"Parameter Actions","detail":"Update parameters directly via visualization interactions","children":[],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":399,"title":"Dashboards","detail":null,"children":[{"id":400,"title":"Definition","detail":"Visualization collection for at-a-glance analysis and interactivity","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":401,"title":"Layout & Sizing","detail":null,"children":[{"id":402,"title":"Device Designer","detail":"Custom layout styling for Desktop, Tablet, or Phone","children":[],"collapsed":true,"depth":4,"color":"c1"},{"id":403,"title":"Sizing Options","detail":"Fixed Size (default), Range, Automatic (resizes to window)","children":[],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"},{"id":404,"title":"Objects","detail":"Horizontal Container, Vertical Container, Blank, Text, Webpage, Image, Navigation/Button (Tiled or Floating)","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":405,"title":"Properties","detail":"Dashboard Layout (borders, padding, colors), Dashboard Actions (interactivity)","children":[],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"},{"id":406,"title":"Stories","detail":null,"children":[{"id":407,"title":"Definition","detail":"Narrative format presenting views in a sequential data-story flow","children":[],"collapsed":true,"depth":3,"color":"c1"},{"id":408,"title":"Story Layout","detail":null,"children":[{"id":409,"title":"Navigation Style","detail":"Caption Boxes, Numbers, Dots, Arrows","children":[],"collapsed":true,"depth":4,"color":"c1"}],"collapsed":true,"depth":3,"color":"c1"}],"collapsed":true,"depth":2,"color":"c1"}],"collapsed":true,"depth":1,"color":"c1"}],"collapsed":false,"depth":0,"color":null};
+        let zoom = 1;
+
+        const elTreeInner = document.getElementById('tree-inner');
+        const elTreeScaled = document.getElementById('tree-scaled');
+        const elZoomLabel = document.getElementById('zoom-label');
+
+        function buildNodeWrapper(node, orderIndex) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'node-wrapper';
+
+            const self = document.createElement('div');
+            self.className = 'node-self' + (node.depth === 0 ? ' is-root' : '');
+            self.dataset.id = node.id;
+            if (node.color) self.style.setProperty('--c', `var(--${node.color})`);
+            self.style.setProperty('--delay', (Math.min(orderIndex, 14) * 0.035) + 's');
+
+            const titleEl = document.createElement('div');
+            titleEl.className = 'n-title';
+            titleEl.textContent = node.title;
+            self.appendChild(titleEl);
+
+            if (node.detail) {
+                const detailEl = document.createElement('div');
+                detailEl.className = 'n-detail';
+                detailEl.textContent = node.detail;
+                self.appendChild(detailEl);
+            }
+
+            if (node.children.length > 0) {
+                const toggle = document.createElement('div');
+                toggle.className = 'toggle';
+                toggle.textContent = node.collapsed ? '+' : '−';
+                toggle.title = node.collapsed ? 'Expand' : 'Collapse';
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    node.collapsed = !node.collapsed;
+                    render();
+                });
+                self.appendChild(toggle);
+            }
+
+            wrapper.appendChild(self);
+
+            if (node.children.length > 0 && !node.collapsed) {
+                const childrenBox = document.createElement('div');
+                childrenBox.className = 'node-children';
+                node.children.forEach((child, i) => {
+                    childrenBox.appendChild(buildNodeWrapper(child, orderIndex + i + 1));
+                });
+                wrapper.appendChild(childrenBox);
+            }
+
+            return wrapper;
+        }
+
+        function drawConnectors() {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'connectors');
+            svg.setAttribute('width', elTreeInner.scrollWidth);
+            svg.setAttribute('height', elTreeInner.scrollHeight);
+
+            function walk(node) {
+                if (node.children.length === 0 || node.collapsed) return;
+                const parentEl = elTreeInner.querySelector(`.node-self[data-id="${node.id}"]`);
+                if (!parentEl) return;
+                const px = parentEl.offsetLeft + parentEl.offsetWidth;
+                const py = parentEl.offsetTop + parentEl.offsetHeight / 2;
+
+                node.children.forEach(child => {
+                    const childEl = elTreeInner.querySelector(`.node-self[data-id="${child.id}"]`);
+                    if (!childEl) return;
+                    const cx = childEl.offsetLeft;
+                    const cy = childEl.offsetTop + childEl.offsetHeight / 2;
+                    const midX = px + (cx - px) * 0.5;
+
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', `M ${px},${py} C ${midX},${py} ${midX},${cy} ${cx},${cy}`);
+                    path.setAttribute('stroke', `var(--${child.color || 'root'})`);
+                    path.setAttribute('opacity', '0.75');
+                    svg.appendChild(path);
+
+                    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    dot.setAttribute('cx', cx);
+                    dot.setAttribute('cy', cy);
+                    dot.setAttribute('fill', `var(--${child.color || 'root'})`);
+                    svg.appendChild(dot);
+
+                    walk(child);
+                });
+            }
+            walk(treeData);
+            elTreeInner.appendChild(svg);
+        }
+
+        function updateScaledSize() {
+            const w = elTreeInner.scrollWidth;
+            const h = elTreeInner.scrollHeight;
+            elTreeScaled.style.transform = `scale(${zoom})`;
+            elTreeScaled.style.width = (w * zoom + 140) + 'px';
+            elTreeScaled.style.height = (h * zoom + 100) + 'px';
+            elZoomLabel.textContent = Math.round(zoom * 100) + '%';
+        }
+
+        function render() {
+            if (!treeData) return;
+            elTreeInner.innerHTML = '';
+            elTreeInner.style.position = 'relative';
+            elTreeInner.appendChild(buildNodeWrapper(treeData, 0));
+            requestAnimationFrame(() => {
+                drawConnectors();
+                updateScaledSize();
+            });
+        }
+
+        function setAllCollapsed(node, value, isRoot = true) {
+            if (!isRoot) node.collapsed = value;
+            node.children.forEach(c => setAllCollapsed(c, value, false));
+        }
+
+        document.getElementById('btn-expand').addEventListener('click', () => { setAllCollapsed(treeData, false); render(); });
+        document.getElementById('btn-collapse').addEventListener('click', () => { setAllCollapsed(treeData, true); render(); });
+
+        document.getElementById('zoom-in').addEventListener('click', () => { zoom = Math.min(1.8, +(zoom + 0.1).toFixed(2)); updateScaledSize(); });
+        document.getElementById('zoom-out').addEventListener('click', () => { zoom = Math.max(0.4, +(zoom - 0.1).toFixed(2)); updateScaledSize(); });
+        document.getElementById('zoom-reset').addEventListener('click', () => { zoom = 1; updateScaledSize(); });
+
+        render();
+    </script>
+</body>
+</html>
