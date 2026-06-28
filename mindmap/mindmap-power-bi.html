@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power BI - Mind Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0B1220;
+            --bg-grid: rgba(255, 255, 255, 0.035);
+            --panel: #101a2e;
+            --panel-border: #1d2c47;
+            --ink: #E6EDF7;
+            --muted: #8694ab;
+            --root: #67E8F9;
+            --c1: #F2B84B;
+            --c2: #2DD4BF;
+            --c3: #FB7472;
+            --c4: #9B8CFF;
+            --c5: #4EA8DE;
+            --c6: #A3E635;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: var(--bg);
+            background-image:
+                linear-gradient(var(--bg-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+            background-size: 28px 28px;
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        .canvas-wrap {
+            position: relative;
+            overflow: auto;
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(ellipse 70% 50% at 18% 12%, rgba(103, 232, 249, 0.06), transparent 60%);
+        }
+
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: linear-gradient(180deg, rgba(11, 18, 32, 0.92), rgba(11, 18, 32, 0.65));
+            backdrop-filter: blur(6px);
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        button {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12.5px;
+            font-weight: 600;
+            border-radius: 7px;
+            border: 1px solid var(--panel-border);
+            background: #15213a;
+            color: var(--ink);
+            padding: 9px 14px;
+            cursor: pointer;
+            transition: transform .12s ease, border-color .15s ease, background .15s ease;
+        }
+
+        button:hover {
+            border-color: var(--root);
+            background: #192742;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .zoom-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+            align-self: center;
+            margin-left: 4px;
+            min-width: 42px;
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        #tree-scaled {
+            transform-origin: top left;
+            padding: 50px 70px 100px;
+        }
+
+        #tree-inner {
+            position: relative;
+            display: inline-block;
+        }
+
+        .node-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .node-children {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+            margin-left: 78px;
+        }
+
+        .node-self {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 10px 18px;
+            border-radius: 9px;
+            border: 1.5px solid var(--c, var(--root));
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+            box-shadow:
+                0 4px 16px -8px rgba(0, 0, 0, 0.7),
+                0 0 16px -6px var(--c, var(--root));
+            white-space: nowrap;
+            z-index: 2;
+            opacity: 0;
+            animation: pop-in .42s cubic-bezier(.2, .8, .2, 1) forwards;
+            animation-delay: var(--delay, 0s);
+        }
+
+        @keyframes pop-in {
+            from {
+                opacity: 0;
+                transform: scale(.85);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .node-self.is-root {
+            padding: 14px 22px;
+            border-width: 2px;
+            font-size: 15.5px;
+        }
+
+        .n-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--ink);
+        }
+
+        .node-self.is-root .n-title {
+            font-size: 15.5px;
+            color: var(--root);
+        }
+
+        .n-detail {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            color: var(--muted);
+        }
+
+        .toggle {
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 19px;
+            height: 19px;
+            border-radius: 50%;
+            background: #0b1220;
+            border: 1.5px solid var(--c, var(--root));
+            color: var(--ink);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 3;
+            user-select: none;
+        }
+
+        .toggle:hover {
+            box-shadow: 0 0 10px -2px var(--c, var(--root));
+        }
+
+        svg.connectors {
+            position: absolute;
+            top: 0;
+            left: 0;
+            overflow: visible;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        svg.connectors path {
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        svg.connectors circle {
+            r: 3;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-wrap" id="canvas-wrap">
+        <div class="toolbar">
+            <button id="zoom-out">−</button>
+            <span class="zoom-label" id="zoom-label">100%</span>
+            <button id="zoom-in">+</button>
+            <button id="zoom-reset">Reset</button>
+            <div class="spacer"></div>
+            <button id="btn-expand">Expand All</button>
+            <button id="btn-collapse" style="margin-right: 8px;">Collapse All</button>
+        </div>
+        <div id="tree-scaled">
+            <div id="tree-inner"></div>
+        </div>
+    </div>
+
+    <footer style="position: fixed; bottom: 0; left: 0; right: 0; padding: 10px 28px; background: rgba(11, 18, 32, 0.85); backdrop-filter: blur(4px); border-top: 1px solid var(--panel-border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; z-index: 10;">
+        Created by <b>Bihar Digital Data & Network</b> (<a href="https://bddn.in" target="_blank" style="color: var(--root); text-decoration: none;">bddn.in</a>)
+    </footer>
+
+    <script>
+        const treeData = {"id":0,"title":"Power BI","detail":null,"children":[{"id":1,"title":"Introduction","detail":null,"children":[{"id":2,"title":"Purpose","detail":"Microsoft's self-service BI Platform for both on-premise and cloud-based data","children":[],"collapsed":false,"depth":2,"color":"c1"},{"id":3,"title":"Capabilities","detail":"Provides business users with tools for aggregating, analyzing, visualizing, and sharing data","children":[],"collapsed":false,"depth":2,"color":"c1"},{"id":4,"title":"Outputs","detail":"Used to build reports and dashboards","children":[],"collapsed":false,"depth":2,"color":"c1"}],"collapsed":false,"depth":1,"color":"c1"},{"id":5,"title":"Data Types in Power BI","detail":null,"children":[{"id":6,"title":"Text","detail":"Represents alphanumeric characters, such as names, addresses, and descriptions","children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":7,"title":"Whole number","detail":"Represents integers without decimal points, such as counts and quantities","children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":8,"title":"Decimal number","detail":"Represents numbers with decimal points, such as prices and percentages","children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":9,"title":"Date/Time","detail":"Represents dates and times, including date/time ranges and durations","children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":10,"title":"Boolean","detail":"Represents logical values, such as \"true\" or \"false\"","children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":11,"title":"Currency","detail":"Represents monetary values with a specified currency symbol, such as dollars or euros","children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":12,"title":"Duration","detail":"Represents time intervals, such as the length of a movie or the duration of a project","children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":13,"title":"Percentage","detail":"Represents values as a percentage of a whole, such as the percentage of a target achieved","children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":14,"title":"Geographical","detail":"Represents geographical data, such as latitude and longitude coordinates or address information","children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":15,"title":"Binary","detail":"Represents binary data, such as images, sound files, or other multimedia content","children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":16,"title":"Whole number (auto-generated)","detail":"Represents a unique identifier that is generated automatically by Power BI, such as a row number or record ID","children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":17,"title":"Web URL","detail":"Represents a URL address, such as a link to a website or online resource","children":[],"collapsed":false,"depth":2,"color":"c2"}],"collapsed":false,"depth":1,"color":"c2"},{"id":18,"title":"Charts in Power BI","detail":null,"children":[{"id":19,"title":"Stacked bar chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":20,"title":"Stacked column chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":21,"title":"Clustered bar chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":22,"title":"Clustered column chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":23,"title":"Line chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":24,"title":"Area chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":25,"title":"Stacked area chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":26,"title":"Line and stacked column chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":27,"title":"Line and clustered column chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":28,"title":"Ribbon chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":29,"title":"Funnel","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":30,"title":"Scatter chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":31,"title":"Pie chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":32,"title":"Donut chart","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"},{"id":33,"title":"Treemap","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c3"}],"collapsed":false,"depth":1,"color":"c3"},{"id":34,"title":"Power BI Tools","detail":null,"children":[{"id":35,"title":"Power BI Desktop","detail":null,"children":[{"id":36,"title":"Data transformation","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c4"},{"id":37,"title":"Data modeling","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c4"},{"id":38,"title":"Row Level Security (RLS)","detail":null,"children":[{"id":39,"title":"Purpose","detail":"Allows users to restrict access to specific rows of data based on user roles and permissions","children":[],"collapsed":false,"depth":4,"color":"c4"},{"id":40,"title":"Types","detail":null,"children":[{"id":41,"title":"Static RLS","detail":"Applies the same set of rules to all users with the same role","children":[],"collapsed":false,"depth":5,"color":"c4"},{"id":42,"title":"Dynamic RLS","detail":"Allows you to create rules that change based on the user's context","children":[],"collapsed":false,"depth":5,"color":"c4"}],"collapsed":false,"depth":4,"color":"c4"}],"collapsed":false,"depth":3,"color":"c4"},{"id":43,"title":"Publishing and sharing","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c4"}],"collapsed":false,"depth":2,"color":"c4"},{"id":44,"title":"Power BI Service","detail":null,"children":[{"id":45,"title":"Data Connectivity","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c4"},{"id":46,"title":"Dashboards","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c4"},{"id":47,"title":"Reports","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c4"},{"id":48,"title":"Collaboration","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c4"},{"id":49,"title":"Security features","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c4"},{"id":50,"title":"Managing Permissions","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c4"},{"id":51,"title":"Portal Access","detail":"Go to app.power bi.com","children":[],"collapsed":false,"depth":3,"color":"c4"},{"id":52,"title":"Workspace Navigation","detail":null,"children":[{"id":53,"title":"My Workspace","detail":null,"children":[{"id":54,"title":"Assets","detail":"Dashboard, Reports, Datasets, Data Flow, Streaming Dataset","children":[],"collapsed":false,"depth":5,"color":"c4"}],"collapsed":false,"depth":4,"color":"c4"}],"collapsed":false,"depth":3,"color":"c4"},{"id":55,"title":"Data Gateway","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c4"}],"collapsed":false,"depth":2,"color":"c4"},{"id":56,"title":"Power BI APP","detail":null,"children":[{"id":57,"title":"Purpose","detail":"Mobile app facility","children":[],"collapsed":false,"depth":3,"color":"c4"}],"collapsed":false,"depth":2,"color":"c4"}],"collapsed":false,"depth":1,"color":"c4"},{"id":58,"title":"Views in Power BI Desktop","detail":null,"children":[{"id":59,"title":"Report View","detail":"Default view in Power BI, where you can create interactive visualizations","children":[],"collapsed":false,"depth":2,"color":"c5"},{"id":60,"title":"Data view","detail":"View and interact with the underlying data that's used in your report","children":[],"collapsed":false,"depth":2,"color":"c5"},{"id":61,"title":"Model view","detail":"Advanced data modeling and managing the relationships between tables in your data model","children":[],"collapsed":false,"depth":2,"color":"c5"}],"collapsed":false,"depth":1,"color":"c5"},{"id":62,"title":"Power Query Editor","detail":null,"children":[{"id":63,"title":"Preview the data and apply filters to see a specific subset of the data","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c6"},{"id":64,"title":"Use various transformation steps to manipulate the data","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c6"}],"collapsed":false,"depth":1,"color":"c6"},{"id":65,"title":"DAX Language in Power BI","detail":null,"children":[{"id":66,"title":"Purpose","detail":"Provides a powerful set of functions for creating custom calculations and measures","children":[],"collapsed":false,"depth":2,"color":"c1"},{"id":67,"title":"Types","detail":null,"children":[{"id":68,"title":"Calculated Columns","detail":"Created using the \"New Column\" feature in the Data View","children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":69,"title":"Calculated Measures","detail":"Measures are created using the \"New Measure\" feature in the Data View","children":[],"collapsed":false,"depth":3,"color":"c1"}],"collapsed":false,"depth":2,"color":"c1"},{"id":70,"title":"Syntax Functions","detail":null,"children":[{"id":71,"title":"CALCULATE","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":72,"title":"SUMX","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":73,"title":"Average","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":74,"title":"IF","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":75,"title":"RELATED","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":76,"title":"CONCATENATE","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":77,"title":"DATE","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"}],"collapsed":false,"depth":2,"color":"c1"},{"id":78,"title":"Sample Syntax Code","detail":null,"children":[{"id":79,"title":"SUM('\"Column1\")","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":80,"title":"Average(\"Column1\"","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":81,"title":"IF(Sales[column1] > 1000, \"High\", \"Low\")","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":82,"title":"SUMX(\"Column1\")","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":83,"title":"Calculate(\"column1\", filter=(\"column2\"))","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":84,"title":"CONCATENATE(Users[First Name], \" \", Users[Last Name])","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"},{"id":85,"title":"CALCULATE(SUM(column1), DATESMTD(DATEADD(Calendar[Date], -1, MONTH)))","detail":null,"children":[],"collapsed":false,"depth":3,"color":"c1"}],"collapsed":false,"depth":2,"color":"c1"}],"collapsed":false,"depth":1,"color":"c1"},{"id":86,"title":"Connections in Power BI","detail":null,"children":[{"id":87,"title":"SQL Connection to Power BI","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":88,"title":"Python Connection to Power BI","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c2"},{"id":89,"title":"R Connection to Power BI","detail":null,"children":[],"collapsed":false,"depth":2,"color":"c2"}],"collapsed":false,"depth":1,"color":"c2"}],"collapsed":false,"depth":0,"color":null};
+        let zoom = 1;
+
+        const elTreeInner = document.getElementById('tree-inner');
+        const elTreeScaled = document.getElementById('tree-scaled');
+        const elZoomLabel = document.getElementById('zoom-label');
+
+        function buildNodeWrapper(node, orderIndex) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'node-wrapper';
+
+            const self = document.createElement('div');
+            self.className = 'node-self' + (node.depth === 0 ? ' is-root' : '');
+            self.dataset.id = node.id;
+            if (node.color) self.style.setProperty('--c', `var(--${node.color})`);
+            self.style.setProperty('--delay', (Math.min(orderIndex, 14) * 0.035) + 's');
+
+            const titleEl = document.createElement('div');
+            titleEl.className = 'n-title';
+            titleEl.textContent = node.title;
+            self.appendChild(titleEl);
+
+            if (node.detail) {
+                const detailEl = document.createElement('div');
+                detailEl.className = 'n-detail';
+                detailEl.textContent = node.detail;
+                self.appendChild(detailEl);
+            }
+
+            if (node.children.length > 0) {
+                const toggle = document.createElement('div');
+                toggle.className = 'toggle';
+                toggle.textContent = node.collapsed ? '+' : '−';
+                toggle.title = node.collapsed ? 'Expand' : 'Collapse';
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    node.collapsed = !node.collapsed;
+                    render();
+                });
+                self.appendChild(toggle);
+            }
+
+            wrapper.appendChild(self);
+
+            if (node.children.length > 0 && !node.collapsed) {
+                const childrenBox = document.createElement('div');
+                childrenBox.className = 'node-children';
+                node.children.forEach((child, i) => {
+                    childrenBox.appendChild(buildNodeWrapper(child, orderIndex + i + 1));
+                });
+                wrapper.appendChild(childrenBox);
+            }
+
+            return wrapper;
+        }
+
+        function drawConnectors() {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'connectors');
+            svg.setAttribute('width', elTreeInner.scrollWidth);
+            svg.setAttribute('height', elTreeInner.scrollHeight);
+
+            function walk(node) {
+                if (node.children.length === 0 || node.collapsed) return;
+                const parentEl = elTreeInner.querySelector(`.node-self[data-id="${node.id}"]`);
+                if (!parentEl) return;
+                const px = parentEl.offsetLeft + parentEl.offsetWidth;
+                const py = parentEl.offsetTop + parentEl.offsetHeight / 2;
+
+                node.children.forEach(child => {
+                    const childEl = elTreeInner.querySelector(`.node-self[data-id="${child.id}"]`);
+                    if (!childEl) return;
+                    const cx = childEl.offsetLeft;
+                    const cy = childEl.offsetTop + childEl.offsetHeight / 2;
+                    const midX = px + (cx - px) * 0.5;
+
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', `M ${px},${py} C ${midX},${py} ${midX},${cy} ${cx},${cy}`);
+                    path.setAttribute('stroke', `var(--${child.color || 'root'})`);
+                    path.setAttribute('opacity', '0.75');
+                    svg.appendChild(path);
+
+                    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    dot.setAttribute('cx', cx);
+                    dot.setAttribute('cy', cy);
+                    dot.setAttribute('fill', `var(--${child.color || 'root'})`);
+                    svg.appendChild(dot);
+
+                    walk(child);
+                });
+            }
+            walk(treeData);
+            elTreeInner.appendChild(svg);
+        }
+
+        function updateScaledSize() {
+            const w = elTreeInner.scrollWidth;
+            const h = elTreeInner.scrollHeight;
+            elTreeScaled.style.transform = `scale(${zoom})`;
+            elTreeScaled.style.width = (w * zoom + 140) + 'px';
+            elTreeScaled.style.height = (h * zoom + 100) + 'px';
+            elZoomLabel.textContent = Math.round(zoom * 100) + '%';
+        }
+
+        function render() {
+            if (!treeData) return;
+            elTreeInner.innerHTML = '';
+            elTreeInner.style.position = 'relative';
+            elTreeInner.appendChild(buildNodeWrapper(treeData, 0));
+            requestAnimationFrame(() => {
+                drawConnectors();
+                updateScaledSize();
+            });
+        }
+
+        function setAllCollapsed(node, value, isRoot = true) {
+            if (!isRoot) node.collapsed = value;
+            node.children.forEach(c => setAllCollapsed(c, value, false));
+        }
+
+        document.getElementById('btn-expand').addEventListener('click', () => { setAllCollapsed(treeData, false); render(); });
+        document.getElementById('btn-collapse').addEventListener('click', () => { setAllCollapsed(treeData, true); render(); });
+
+        document.getElementById('zoom-in').addEventListener('click', () => { zoom = Math.min(1.8, +(zoom + 0.1).toFixed(2)); updateScaledSize(); });
+        document.getElementById('zoom-out').addEventListener('click', () => { zoom = Math.max(0.4, +(zoom - 0.1).toFixed(2)); updateScaledSize(); });
+        document.getElementById('zoom-reset').addEventListener('click', () => { zoom = 1; updateScaledSize(); });
+
+        render();
+    </script>
+</body>
+</html>
